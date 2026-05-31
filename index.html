@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Navigator — Find Your Perfect AI Tool</title>
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --blue: #00c8ff;
+            --blue-dim: rgba(0,200,255,0.12);
+            --blue-border: rgba(0,200,255,0.22);
+            --bg: #07070f;
+            --card: rgba(255,255,255,0.025);
+            --border: rgba(255,255,255,0.07);
+            --text: #e0e0ff;
+            --muted: #6666aa;
+            --dim: #33334d;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            min-height: 100vh;
+        }
+
+        body::before {
+            content: '';
+            position: fixed; inset: 0;
+            background-image:
+                linear-gradient(rgba(0,200,255,0.022) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0,200,255,0.022) 1px, transparent 1px);
+            background-size: 44px 44px;
+            pointer-events: none; z-index: 0;
+        }
+        body::after {
+            content: '';
+            position: fixed; top: -180px; left: 50%; transform: translateX(-50%);
+            width: 700px; height: 360px;
+            background: radial-gradient(ellipse, rgba(0,130,255,0.07) 0%, transparent 70%);
+            pointer-events: none; z-index: 0;
+        }
+
+        .page { position: relative; z-index: 1; max-width: 800px; margin: 0 auto; padding: 60px 22px 100px; }
+
+        /* Header */
+        header { text-align: center; margin-bottom: 48px; }
+        .eyebrow { font-size: 11px; letter-spacing: 5px; text-transform: uppercase; color: var(--blue); opacity: .7; margin-bottom: 18px; }
+        h1 {
+            font-size: clamp(32px, 6vw, 54px); font-weight: 800; letter-spacing: -1px; line-height: 1.15;
+            background: linear-gradient(140deg, #fff 20%, var(--blue));
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+            margin-bottom: 16px;
+        }
+        .subtitle { color: var(--muted); font-size: 15px; max-width: 440px; margin: 0 auto; line-height: 1.7; }
+
+        /* Input card */
+        .input-card {
+            background: var(--card); border: 1px solid var(--blue-border);
+            border-radius: 18px; padding: 30px 28px 26px; margin-bottom: 22px;
+        }
+
+        /* Category chips */
+        .chips-label { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--blue); opacity: .75; margin-bottom: 10px; display: block; }
+        .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+        .chip {
+            background: rgba(0,0,0,0.35); border: 1px solid var(--border);
+            border-radius: 20px; color: var(--muted); font-size: 12.5px;
+            padding: 6px 14px; cursor: pointer; transition: all .18s; user-select: none;
+        }
+        .chip:hover { border-color: var(--blue-border); color: #aac; }
+        .chip.active { background: var(--blue-dim); border-color: var(--blue-border); color: var(--blue); }
+
+        .field-label { font-size: 11px; letter-spacing: 3px; text-transform: uppercase; color: var(--blue); opacity: .8; margin-bottom: 10px; display: block; }
+        textarea {
+            width: 100%; background: rgba(0,0,0,0.45); border: 1px solid var(--border);
+            border-radius: 10px; color: var(--text); font-size: 15px; padding: 14px 16px;
+            resize: vertical; min-height: 96px; font-family: inherit; line-height: 1.6;
+            outline: none; transition: border-color .2s, box-shadow .2s;
+        }
+        textarea:focus { border-color: var(--blue-border); box-shadow: 0 0 0 3px rgba(0,200,255,.06); }
+        textarea::placeholder { color: var(--dim); }
+
+        /* Depth */
+        .depth-section { margin-top: 20px; }
+        .depth-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 8px; margin-top: 10px; }
+        @media(max-width:560px){ .depth-grid { grid-template-columns: repeat(2,1fr); } }
+        .depth-btn {
+            background: rgba(0,0,0,.35); border: 1px solid var(--border); border-radius: 9px;
+            color: var(--muted); font-size: 12px; padding: 10px 8px; cursor: pointer;
+            transition: all .18s; text-align: center; line-height: 1.4;
+        }
+        .depth-btn:hover { border-color: var(--blue-border); color: #aac; }
+        .depth-btn.active { background: var(--blue-dim); border-color: var(--blue-border); color: var(--blue); }
+        .depth-btn .icon { display: block; font-size: 16px; margin-bottom: 3px; }
+        .depth-btn .lbl { display: block; font-weight: 600; }
+        .depth-btn .sub { display: block; font-size: 10px; color: var(--dim); margin-top: 2px; }
+        .depth-btn.active .sub { color: rgba(0,200,255,.5); }
+
+        .find-btn {
+            width: 100%; margin-top: 22px;
+            background: linear-gradient(130deg, #005faa, #00b8ee);
+            border: none; border-radius: 11px; color: #fff;
+            font-size: 15px; font-weight: 700; padding: 15px; cursor: pointer;
+            letter-spacing: .5px; transition: all .2s;
+        }
+        .find-btn:hover { transform: translateY(-1px); box-shadow: 0 10px 34px rgba(0,180,240,.22); }
+        .find-btn:active { transform: translateY(0); }
+        .find-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; box-shadow: none; }
+
+        /* Loading */
+        #loading { display: none; text-align: center; padding: 48px 0; }
+        .spinner { display: inline-block; width: 36px; height: 36px; border: 2px solid var(--border); border-top-color: var(--blue); border-radius: 50%; animation: spin .8s linear infinite; margin-bottom: 14px; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .loading-text { color: var(--muted); font-size: 14px; letter-spacing: 1px; }
+        .loading-dots::after { content: ''; animation: dots 1.4s steps(4,end) infinite; }
+        @keyframes dots { 0%,100%{content:''} 25%{content:'.'} 50%{content:'..'} 75%{content:'...'} }
+
+        /* Results */
+        #results { display: none; }
+
+        .result-section {
+            background: var(--card); border: 1px solid var(--border);
+            border-radius: 14px; padding: 22px 24px; margin-bottom: 14px;
+            opacity: 0; transform: translateY(12px);
+            animation: fadeUp .4s ease forwards;
+        }
+        .result-section:nth-child(1){animation-delay:.03s}
+        .result-section:nth-child(2){animation-delay:.09s}
+        .result-section:nth-child(3){animation-delay:.15s}
+        .result-section:nth-child(4){animation-delay:.21s}
+        .result-section:nth-child(5){animation-delay:.27s}
+        @keyframes fadeUp { to { opacity:1; transform:translateY(0); } }
+
+        .section-tag { font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--blue); opacity: .65; margin-bottom: 8px; }
+
+        .tool-hero { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+        .tool-name-big { font-size: 26px; font-weight: 800; color: #fff; }
+        .tool-category-tag { font-size: 11px; letter-spacing: 2px; text-transform: uppercase; color: var(--blue); opacity: .7; margin-top: 4px; }
+        .tool-link-btn {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: var(--blue-dim); border: 1px solid var(--blue-border);
+            border-radius: 9px; color: var(--blue); font-size: 13px; font-weight: 600;
+            padding: 9px 18px; text-decoration: none; transition: all .18s; white-space: nowrap;
+        }
+        .tool-link-btn:hover { background: rgba(0,200,255,.2); color: #fff; }
+
+        .reason-text { color: #aaaacc; font-size: 14.5px; line-height: 1.7; }
+
+        .prompt-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+        .copy-btn {
+            background: transparent; border: 1px solid var(--blue-border);
+            border-radius: 7px; color: var(--blue); font-size: 12px; font-weight: 600;
+            padding: 5px 13px; cursor: pointer; transition: all .18s;
+        }
+        .copy-btn:hover { background: var(--blue-dim); }
+        .copy-btn.copied { color: #44ffaa; border-color: rgba(68,255,170,.4); }
+        .prompt-text {
+            background: rgba(0,0,0,.4); border: 1px solid rgba(255,255,255,.05);
+            border-radius: 8px; padding: 14px 16px;
+            color: #bbbbdd; font-size: 13px; line-height: 1.75;
+            font-family: 'SF Mono','Consolas','Courier New',monospace;
+            white-space: pre-wrap; max-height: 300px; overflow-y: auto;
+        }
+
+        .fup-intro { color: var(--muted); font-size: 13px; margin-bottom: 14px; line-height: 1.6; }
+        .fup-intro strong { color: var(--blue); }
+        .fup-list { display: flex; flex-direction: column; gap: 10px; }
+        .fup-item {
+            background: rgba(0,0,0,.3); border: 1px solid rgba(255,255,255,.06);
+            border-radius: 9px; padding: 12px 16px;
+            color: #ccccee; font-size: 13.5px; line-height: 1.5;
+            display: flex; align-items: flex-start; gap: 10px;
+        }
+        .fup-num {
+            width: 22px; height: 22px; border-radius: 50%;
+            background: var(--blue-dim); border: 1px solid var(--blue-border);
+            color: var(--blue); font-size: 11px; font-weight: 700;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+
+        .confidence-row { display: flex; align-items: center; gap: 16px; }
+        .confidence-score { font-size: 34px; font-weight: 800; color: #fff; }
+        .confidence-bar-wrap { flex: 1; }
+        .confidence-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+        .confidence-bar { height: 6px; background: rgba(255,255,255,.07); border-radius: 99px; overflow: hidden; }
+        .confidence-fill { height: 100%; border-radius: 99px; background: linear-gradient(90deg, #005faa, var(--blue)); transition: width 1s cubic-bezier(.4,0,.2,1); }
+
+        .reset-btn {
+            background: transparent; border: 1px solid var(--border);
+            border-radius: 8px; color: #555577; font-size: 13px;
+            padding: 10px 20px; cursor: pointer; transition: all .18s; margin-top: 6px;
+        }
+        .reset-btn:hover { border-color: rgba(255,255,255,.2); color: #aac; }
+
+        .error-box {
+            background: rgba(255,60,60,.06); border: 1px solid rgba(255,60,60,.2);
+            border-radius: 12px; padding: 18px 22px; color: #ff8888; font-size: 14px;
+            line-height: 1.6; display: none; margin-bottom: 18px;
+        }
+
+        footer { text-align: center; margin-top: 72px; color: #1e1e33; font-size: 12px; letter-spacing: 1px; }
+    </style>
+</head>
+<body>
+<div class="page">
+
+    <header>
+        <div class="eyebrow">⚡ AI Navigator</div>
+        <h1>Find the Right AI<br>for Any Task</h1>
+        <p class="subtitle">Type what you need to do. Get the best AI tool, a ready-to-paste prompt, and questions to sharpen it before you run.</p>
+    </header>
+
+    <div class="input-card">
+        <span class="chips-label">Quick category</span>
+        <div class="chips" id="chips">
+            <span class="chip" data-cat="Writing">✍️ Writing</span>
+            <span class="chip" data-cat="Coding">💻 Coding</span>
+            <span class="chip" data-cat="Research">🔍 Research</span>
+            <span class="chip" data-cat="Image Generation">🎨 Images</span>
+            <span class="chip" data-cat="Video Generation">🎬 Video</span>
+            <span class="chip" data-cat="Audio/Voice">🎙️ Audio</span>
+            <span class="chip" data-cat="Business/Marketing">📊 Business</span>
+            <span class="chip" data-cat="Legal">⚖️ Legal</span>
+            <span class="chip" data-cat="Education">📚 Education</span>
+            <span class="chip" data-cat="Data Analysis">📈 Data</span>
+            <span class="chip" data-cat="Creative Brainstorming">💡 Creative</span>
+            <span class="chip" data-cat="Productivity">⚙️ Productivity</span>
+        </div>
+
+        <label class="field-label" for="task-input">Describe your task</label>
+        <textarea
+            id="task-input"
+            placeholder="e.g. Write a cold email to potential real estate clients introducing my services... I want to learn Python from scratch... Generate images for my brand..."
+        ></textarea>
+
+        <div class="depth-section">
+            <label class="field-label">How deep?</label>
+            <div class="depth-grid">
+                <button class="depth-btn active" data-depth="quick">
+                    <span class="icon">⚡</span><span class="lbl">Quick</span><span class="sub">Overview only</span>
+                </button>
+                <button class="depth-btn" data-depth="stepbystep">
+                    <span class="icon">📘</span><span class="lbl">Step-by-Step</span><span class="sub">Walk me through it</span>
+                </button>
+                <button class="depth-btn" data-depth="deep">
+                    <span class="icon">🔬</span><span class="lbl">Deep Dive</span><span class="sub">Full detail + examples</span>
+                </button>
+                <button class="depth-btn" data-depth="expert">
+                    <span class="icon">🧠</span><span class="lbl">Expert</span><span class="sub">No hand-holding</span>
+                </button>
+            </div>
+        </div>
+
+        <button class="find-btn" id="find-btn" onclick="findAI()">Find My AI Tool →</button>
+    </div>
+
+    <div class="error-box" id="error-box"></div>
+    <div id="loading">
+        <div class="spinner"></div>
+        <div class="loading-text">Finding the best AI for your task<span class="loading-dots"></span></div>
+    </div>
+    <div id="results"></div>
+
+    <footer>AI Navigator &nbsp;·&nbsp; the right tool for every task</footer>
+</div>
+
+<script>
+let currentPrompt = '';
+
+document.querySelectorAll('.chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+        const wasActive = chip.classList.contains('active');
+        document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+        if (!wasActive) { chip.classList.add('active'); document.getElementById('task-input').focus(); }
+    });
+});
+
+document.querySelectorAll('.depth-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.depth-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+    });
+});
+
+async function findAI() {
+    const task = document.getElementById('task-input').value.trim();
+    if (!task) {
+        const ta = document.getElementById('task-input');
+        ta.style.borderColor = 'rgba(255,80,80,.5)';
+        ta.focus();
+        setTimeout(() => ta.style.borderColor = '', 1600);
+        return;
+    }
+
+    const depth = document.querySelector('.depth-btn.active')?.dataset?.depth || 'quick';
+    const category = document.querySelector('.chip.active')?.dataset?.cat || '';
+
+    setLoading(true);
+    clearError();
+    document.getElementById('results').style.display = 'none';
+
+    try {
+        const res = await fetch('/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ task, depth, category })
+        });
+
+        if (!res.ok) {
+            const err = await res.json().catch(() => ({}));
+            throw new Error(err?.error || `Error ${res.status}`);
+        }
+
+        const data = await res.json();
+        const raw = data.content?.[0]?.text || '';
+        const jsonStr = raw.replace(/^```json\s*/,'').replace(/\s*```$/,'').trim();
+        const result = JSON.parse(jsonStr);
+        renderResults(result);
+    } catch (e) {
+        showError('Something went wrong: ' + e.message);
+    } finally {
+        setLoading(false);
+    }
+}
+
+function renderResults(r) {
+    currentPrompt = r.prompt || '';
+    const conf = Math.min(100, Math.max(0, r.confidence_score || 80));
+    const confColor = conf >= 85 ? '#44ffaa' : conf >= 65 ? '#00c8ff' : '#ffaa44';
+
+    const fupHTML = (r.follow_up_questions || []).map((q, i) => `
+        <div class="fup-item">
+            <div class="fup-num">${i+1}</div>
+            <span>${escHtml(q)}</span>
+        </div>`).join('');
+
+    document.getElementById('results').innerHTML = `
+        <div class="result-section">
+            <div class="section-tag">Best AI Tool</div>
+            <div class="tool-hero">
+                <div>
+                    <div class="tool-name-big">${escHtml(r.tool_name)}</div>
+                    <div class="tool-category-tag">${escHtml(r.tool_category || '')}</div>
+                </div>
+                <a href="${escHtml(r.tool_url)}" target="_blank" rel="noopener noreferrer" class="tool-link-btn">Open ${escHtml(r.tool_name)} ↗</a>
+            </div>
+        </div>
+        <div class="result-section">
+            <div class="section-tag">Why It's the Best Choice</div>
+            <div class="reason-text">${escHtml(r.tool_reason)}</div>
+        </div>
+        <div class="result-section">
+            <div class="section-tag">Ready-to-Paste Prompt</div>
+            <div class="prompt-top">
+                <span style="font-size:13px;color:var(--muted)">Paste this directly into ${escHtml(r.tool_name)}</span>
+                <button class="copy-btn" id="copy-btn" onclick="copyPrompt()">Copy Prompt</button>
+            </div>
+            <div class="prompt-text">${escHtml(currentPrompt)}</div>
+        </div>
+        <div class="result-section">
+            <div class="section-tag">Before You Run the Prompt</div>
+            <div class="fup-intro">Answer these in the search bar above, then re-run for a <strong>dramatically better result</strong>:</div>
+            <div class="fup-list">${fupHTML}</div>
+        </div>
+        <div class="result-section">
+            <div class="section-tag">Confidence Score</div>
+            <div class="confidence-row">
+                <div class="confidence-score" style="color:${confColor}">${conf}%</div>
+                <div class="confidence-bar-wrap">
+                    <div class="confidence-label">How well this tool matches your task</div>
+                    <div class="confidence-bar"><div class="confidence-fill" id="conf-fill" style="width:0%"></div></div>
+                </div>
+            </div>
+        </div>
+        <button class="reset-btn" onclick="reset()">← Start Over</button>
+    `;
+
+    document.getElementById('results').style.display = 'block';
+    document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+        const fill = document.getElementById('conf-fill');
+        if (fill) { fill.style.background = `linear-gradient(90deg,#005faa,${confColor})`; fill.style.width = conf + '%'; }
+    }));
+}
+
+function copyPrompt() {
+    if (!currentPrompt) return;
+    navigator.clipboard.writeText(currentPrompt).then(() => {
+        const btn = document.getElementById('copy-btn');
+        if (!btn) return;
+        btn.textContent = '✓ Copied!'; btn.classList.add('copied');
+        setTimeout(() => { btn.textContent = 'Copy Prompt'; btn.classList.remove('copied'); }, 2400);
+    });
+}
+
+function reset() {
+    document.getElementById('results').style.display = 'none';
+    document.getElementById('task-input').value = '';
+    document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.depth-btn').forEach(b => b.classList.remove('active'));
+    document.querySelector('[data-depth="quick"]').classList.add('active');
+    currentPrompt = '';
+    clearError();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function setLoading(on) {
+    document.getElementById('loading').style.display = on ? 'block' : 'none';
+    document.getElementById('find-btn').disabled = on;
+}
+function showError(msg) { const e = document.getElementById('error-box'); e.textContent = msg; e.style.display = 'block'; }
+function clearError() { document.getElementById('error-box').style.display = 'none'; }
+function escHtml(s) { return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+document.getElementById('task-input').addEventListener('keydown', e => {
+    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) findAI();
+});
+</script>
+</body>
+</html>
